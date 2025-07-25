@@ -18,7 +18,7 @@ from pydantic import Field
 class TushareAvailableIndicesQueryParams(AvailableIndicesQueryParams):
     """Tushare Available Indices Query.
 
-    Source: https://tushare.pro/document/2?doc_id=25
+    Source: https://tushare.pro/document/2?doc_id=94
     """
     use_cache: bool = Field(
         default=True,
@@ -27,13 +27,6 @@ class TushareAvailableIndicesQueryParams(AvailableIndicesQueryParams):
 
 class TushareAvailableIndicesData(AvailableIndicesData):
     """Tushare Available Indices Data."""
-
-    __alias_dict__ = {
-        "currency": "curr_type",
-    }
-
-    symbol: str = Field(description="Symbol for the index.")
-
 
 class TushareAvailableIndicesFetcher(
     Fetcher[

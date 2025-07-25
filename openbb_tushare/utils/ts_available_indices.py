@@ -8,23 +8,20 @@ from openbb_tushare.utils.table_cache import TableCache
 from openbb_tushare.utils.tools import setup_logger
 
 TABLE_SCHEMA = {
-    "symbol": "TEXT PRIMARY KEY",  # Unique identifier for the asset
-    "ts_code": "TEXT",             # Trading symbol/code 
-    "name": "TEXT",                 # Short name of the asset
-    "area": "TEXT",                 # Geographic region
-    "industry": "TEXT",             # Industry classification
-    "fullname": "TEXT",             # Full legal name
-    "enname": "TEXT",               # English name
-    "cnspell": "TEXT",              # Chinese phonetic abbreviation
-    "market": "TEXT",               # Market classification (e.g. A-shares)
-    "exchange": "TEXT",             # Exchange code (e.g. SSE/SZSE)
-    "curr_type": "TEXT",            # Currency type (CNY/USD/HKD)
-    "list_status": "TEXT",          # Listing status (L/D/P)
-    "list_date": "TEXT",            # Listing date (YYYYMMDD)
-    "delist_date": "TEXT",          # Delisting date (YYYYMMDD)
-    "is_hs": "TEXT",                # Hong Kong Connect eligibility (N/H/S)
-    "act_name": "TEXT",             # Actual controller name
-    "act_ent_type": "TEXT",         # Controller entity type
+    "ts_code": "TEXT PRIMARY KEY",    # Unique identifier (TS代码)
+    "name": "TEXT NOT NULL",          # Short name (简称)
+    "fullname": "TEXT",               # Full index name (指数全称)
+    "market": "TEXT NOT NULL",         # Market identifier (市场)
+    "publisher": "TEXT",               # Publisher (发布方)
+    "index_type": "TEXT",              # Index style classification (指数风格)
+    "category": "TEXT",                # Index category (指数类别)
+    "base_date": "TEXT",               # Base period (基期, YYYYMMDD format)
+    "base_point": "REAL",              # Base points (基点, floating-point)
+    "list_date": "TEXT",               # Listing date (发布日期, YYYYMMDD format)
+    "weight_rule": "TEXT",             # Weighting method (加权方式)
+    "desc": "TEXT",                    # Description (描述)
+    "exp_date": "TEXT",                # Expiry date (终止日期, YYYYMMDD format)
+    "currency": "TEXT"                 # Currency type (货币)
 }
 
 setup_logger()
@@ -39,7 +36,7 @@ def get_available_indices(use_cache: bool = True, api_key : str = "") -> pd.Data
     if tushare_api_key is None:
         raise ValueError("TUSHARE_API_KEY environment variable not set.")
 
-    cache = TableCache(TABLE_SCHEMA, table_name="indices")
+    cache = TableCache(TABLE_SCHEMA, table_name="indices", primary_key="ts_code")
     if use_cache:
         data = cache.read_dataframe()
         if not data.empty:
@@ -48,6 +45,7 @@ def get_available_indices(use_cache: bool = True, api_key : str = "") -> pd.Data
 
     logger.info(f"Generating new indices data...")
     pro = ts.pro_api(tushare_api_key)
-    data = pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,fullname,enname,cnspell,market,exchange,curr_type,list_status,list_date,delist_date,is_hs,act_name,act_ent_type')
+    data = pro.index_basic()
+    data["currency"] = "CNY"
     cache.write_dataframe(data)
     return data
