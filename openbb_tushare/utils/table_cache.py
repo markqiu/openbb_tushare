@@ -61,6 +61,30 @@ class TableCache:
             df = pd.read_sql_query(query, conn)
         return df
 
+    def read_rows(self, filters: Dict[str, Any]) -> pd.DataFrame:
+        """
+        Read data from the SQLite database and return as a DataFrame, filtered by specified conditions.
+        
+        Args:
+            filters (Dict[str, Any]): A dictionary where keys are column names and values are the values to filter by.
+            
+        Returns:
+            pd.DataFrame: Filtered DataFrame containing only rows that match all the filter conditions.
+        """
+        if not filters:
+            return self.read_dataframe()
+        
+        # Build WHERE clause dynamically from filters dictionary
+        where_conditions = " AND ".join([f"{key} = ?" for key in filters.keys()])
+        query = f"SELECT * FROM {self.table_name} WHERE {where_conditions}"
+        
+        # Extract filter values in the same order as keys for parameter binding
+        params = list(filters.values())
+        
+        with sqlite3.connect(self.db_path) as conn:
+            df = pd.read_sql_query(query, conn, params=params)
+        return df
+
     def update_or_insert(self, df: pd.DataFrame):
         """
         Remove existing records with the same 'symbol' and insert new ones.
