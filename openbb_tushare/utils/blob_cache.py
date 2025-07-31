@@ -6,7 +6,7 @@ import pickle
 import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-from openbb_akshare.utils.tools import setup_logger
+from openbb_tushare.utils.tools import setup_logger
 
 CACHE_TTL = 60*60  # 60 seconds
 setup_logger()
@@ -50,7 +50,7 @@ class BlobCache:
         self.table_name = table_name
         self.conn = None
         if db_path is None:
-            from openbb_akshare.utils import get_cache_path
+            from openbb_tushare.utils import get_cache_path
             self.db_path = get_cache_path()
         else:
             os.makedirs(db_path, exist_ok=True)
@@ -71,37 +71,38 @@ class BlobCache:
             ''')
             conn.commit()
 
-    def load_cached_data(self, symbol:str, report_type, get_data, *args, **kwargs):
+    def load_cached_data(self, symbol:str, report_type, use_cache, get_data, api_key : str = "", *args, **kwargs):
         """Load cached data from SQLite cache or generate new data."""
-        from openbb_akshare.utils.tools import normalize_symbol
+        from openbb_tushare.utils.tools import normalize_symbol
         symbol_b, symbol_f, market = normalize_symbol(symbol)
         key = f"{market}{symbol_b}{report_type}"
         now = time.time()
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute(f'SELECT timestamp, data FROM {self.table_name} WHERE key=?', (key,))
-            row = cursor.fetchone()
+            if use_cache:
+                cursor.execute(f'SELECT timestamp, data FROM {self.table_name} WHERE key=?', (key,))
+                row = cursor.fetchone()
 
-            if row:
-                timestamp, data_blob = row
-                stored_date = datetime.fromtimestamp(timestamp)
-                if report_type == "annual":
-                    expired_date = calculate_cache_ttl(get_next_year_start, now=stored_date)
-                    if now < expired_date.timestamp():
-                        logger.info("Loading annual data from SQLite cache...")
-                        return pickle.loads(data_blob)
-                elif report_type == "quarter":
-                    expired_date = calculate_cache_ttl(get_next_quarter_start, now=stored_date)
-                    if now < expired_date.timestamp():
-                        logger.info("Loading quarter data from SQLite cache...")
-                        return pickle.loads(data_blob)
-                else:
-                    if now - timestamp < CACHE_TTL:
-                        logger.info("Loading data from SQLite cache...")
-                        return pickle.loads(data_blob)
+                if row:
+                    timestamp, data_blob = row
+                    stored_date = datetime.fromtimestamp(timestamp)
+                    if report_type == "annual":
+                        expired_date = calculate_cache_ttl(get_next_year_start, now=stored_date)
+                        if now < expired_date.timestamp():
+                            logger.info("Loading annual data from SQLite cache...")
+                            return pickle.loads(data_blob)
+                    elif report_type == "quarter":
+                        expired_date = calculate_cache_ttl(get_next_quarter_start, now=stored_date)
+                        if now < expired_date.timestamp():
+                            logger.info("Loading quarter data from SQLite cache...")
+                            return pickle.loads(data_blob)
+                    else:
+                        if now - timestamp < CACHE_TTL:
+                            logger.info("Loading data from SQLite cache...")
+                            return pickle.loads(data_blob)
 
             logger.info(f"Generating new {report_type} data...")
-            df = get_data(symbol, report_type)
+            df = get_data(symbol, report_type, api_key=api_key)
 
             # 序列化 DataFrame
             data_blob = pickle.dumps(df)
