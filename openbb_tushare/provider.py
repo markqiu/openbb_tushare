@@ -8,7 +8,7 @@ from openbb_tushare.models.equity_historical import TushareEquityHistoricalFetch
 from openbb_tushare.models.equity_profile import TushareEquityProfileFetcher
 from openbb_tushare.models.equity_quote import TushareEquityQuoteFetcher
 from openbb_tushare.models.equity_search import TushareEquitySearchFetcher
-from openbb_tushare.models.etf_search import TushareETFSearchFetcher
+from openbb_tushare.models.etf_search import TushareEtfSearchFetcher
 from openbb_tushare.models.historical_dividends import TushareHistoricalDividendsFetcher
 from openbb_tushare.models.income_statement import TushareIncomeStatementFetcher
 
@@ -29,7 +29,7 @@ provider = Provider(
         "EquityInfo": TushareEquityProfileFetcher,
         "EquityQuote": TushareEquityQuoteFetcher,
         "EquitySearch": TushareEquitySearchFetcher,
-        "ETFSearch": TushareETFSearchFetcher,
+        "EtfSearch": TushareEtfSearchFetcher,
         "HistoricalDividends": TushareHistoricalDividendsFetcher,
         "IncomeStatement": TushareIncomeStatementFetcher,
     }
