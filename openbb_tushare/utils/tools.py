@@ -89,12 +89,17 @@ def normalize_symbol(symbol: str) -> tuple[str, str, str]:
     """
     symbol = symbol.strip()  # Remove leading/trailing whitespace
     
+    # Market suffix mapping (Yahoo Finance -> Tushare)
+    market_mapping = {
+        "SS": "SH",  # Shanghai Stock Exchange
+        "HKI": "HK",  # Hong Kong Stock Exchange
+    }
+    
     # If symbol already contains market suffix
     if "." in symbol:
         base, market = symbol.split(".")
-        # Handle Hong Kong market special case (HKI -> HK)
-        if market == "HKI":
-            market = "HK"
+        # Map market suffix if needed
+        market = market_mapping.get(market, market)
         return base, f"{base}.{market}", market
 
     # No market suffix, determine by pattern
