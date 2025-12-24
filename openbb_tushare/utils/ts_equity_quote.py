@@ -26,6 +26,9 @@ def get_one(ts_code : str, use_cache: bool = True, api_key : str = "") -> pd.Dat
         df_data = df_data[['ts_code', 'open', 'high', 'low', 'close', 'vol', 'pre_close']]
         df_data = df_data.rename(columns={'vol': 'volume', 'pre_close': 'prev_close'})
     else:
+        # Set token for tushare, needed for ts.realtime_quote
+        ts.set_token(tushare_api_key)
+
         logger.info(f"Calling ts.realtime_quote({symbol})")
         df_data = ts.realtime_quote(symbol)
         if df_data is None or df_data.empty:
