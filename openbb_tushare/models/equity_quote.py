@@ -10,9 +10,9 @@ from openbb_core.provider.standard_models.equity_quote import (
     EquityQuoteData,
     EquityQuoteQueryParams,
 )
-from pydantic import Field
+from pydantic import Field, field_validator
 import logging
-from openbb_tushare.utils.tools import setup_logger, normalize_symbol
+from openbb_tushare.utils.tools import setup_logger, normalize_tushare_symbol_list
 
 setup_logger()
 logger = logging.getLogger(__name__)
@@ -26,6 +26,13 @@ class TushareEquityQuoteQueryParams(EquityQuoteQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
 
 
 class TushareEquityQuoteData(EquityQuoteData):
