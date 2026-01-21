@@ -19,5 +19,8 @@ openbb-devtools = { version = "^1.0.0" }
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.plugins."openbb_core_extension"]
+openbb_tushare = "openbb_tushare.router:router"
+
 [tool.poetry.plugins."openbb_provider_extension"]
 openbb_tushare = "openbb_tushare.provider:provider"
